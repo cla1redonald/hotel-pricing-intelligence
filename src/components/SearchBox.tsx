@@ -49,7 +49,7 @@ export function SearchBox({
           value={query}
           onChange={(e) => onQueryChange(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Search for a hotel... e.g. quiet boutique near Covent Garden"
+          placeholder="Where do you want to stay?"
           disabled={isLoading}
           className="flex-1 bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-muted)] text-base outline-none disabled:cursor-not-allowed disabled:opacity-60 min-w-0 h-full"
           aria-label="Search hotels"

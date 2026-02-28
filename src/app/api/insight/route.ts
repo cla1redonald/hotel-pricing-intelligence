@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       .map((c) => `- ${c.name}: £${Math.round(c.price)}`)
       .join('\n');
 
-    const basePrompt = `You are a hotel pricing analyst. Given the following hotel and its competitive position, provide 1-2 sentences of booking advice. Be specific about whether to book now or wait, and reference specific competitors and prices.
+    const basePrompt = `You are a friendly travel advisor helping someone find the best hotel deal in London. Given the following hotel and pricing data, provide 1-2 sentences of warm, practical booking advice. Use everyday language — no jargon. Be specific about whether to book now or wait, and mention a competitor by name if relevant.
 
 Hotel: ${safeHotelName} in ${safeNeighborhood}
 Price: £${Math.round(dynamicPrice)} per night
@@ -178,7 +178,7 @@ Pricing factors:
 Competitors:
 ${competitorLines}
 
-Provide concise, actionable booking advice.`;
+Provide concise, friendly booking advice.`;
 
     // Append deal-focused suffix for url-analysis mode
     let prompt = basePrompt;
