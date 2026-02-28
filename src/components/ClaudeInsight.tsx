@@ -4,12 +4,22 @@ import { useEffect, useState, useRef } from 'react';
 import { Sparkles } from 'lucide-react';
 import type { PricingBreakdown } from '@/types';
 
+interface InsightContext {
+  mode: 'search' | 'url-analysis';
+  listedPrice?: number;
+  currency?: string;
+  source?: string;
+  dealLabel?: string;
+  percentageDiff?: number;
+}
+
 interface ClaudeInsightProps {
   hotelName: string;
   neighborhood: string;
   dynamicPrice: number;
   pricingBreakdown: PricingBreakdown;
   competitors: Array<{ name: string; price: number }>;
+  context?: InsightContext;
 }
 
 function LoadingSkeleton() {
@@ -33,6 +43,7 @@ export function ClaudeInsight({
   dynamicPrice,
   pricingBreakdown,
   competitors,
+  context,
 }: ClaudeInsightProps) {
   const [insightText, setInsightText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -67,6 +78,7 @@ export function ClaudeInsight({
             dynamicPrice,
             pricingBreakdown,
             competitors,
+            ...(context !== undefined ? { context } : {}),
           }),
           signal: abortControllerRef.current.signal,
         });

@@ -4,12 +4,22 @@ import { NextRequest } from 'next/server';
 import type { PricingBreakdown } from '@/types';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
 
+interface InsightContext {
+  mode: 'search' | 'url-analysis';
+  listedPrice?: number;
+  currency?: string;
+  source?: string;
+  dealLabel?: string;
+  percentageDiff?: number;
+}
+
 interface InsightRequest {
   hotelName: string;
   neighborhood: string;
   dynamicPrice: number;
   pricingBreakdown: PricingBreakdown;
   competitors: Array<{ name: string; price: number }>;
+  context?: InsightContext;
 }
 
 export async function POST(request: NextRequest) {
@@ -45,6 +55,7 @@ export async function POST(request: NextRequest) {
     dynamicPrice,
     pricingBreakdown,
     competitors,
+    context,
   } = body as Partial<InsightRequest>;
 
   if (!hotelName || typeof hotelName !== 'string') {
@@ -117,6 +128,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Validate context.listedPrice if context.mode === 'url-analysis'
+  if (
+    context &&
+    context.mode === 'url-analysis' &&
+    context.listedPrice !== undefined &&
+    (!Number.isFinite(context.listedPrice) || context.listedPrice <= 0)
+  ) {
+    return new Response(
+      JSON.stringify({ error: 'context.listedPrice must be a positive number' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   // S4: Sanitize and truncate user-supplied strings to prevent prompt injection
   const safeHotelName = hotelName.slice(0, 200).replace(/[<>{}]/g, '');
   const safeNeighborhood = neighborhood.slice(0, 100).replace(/[<>{}]/g, '');
@@ -124,6 +148,14 @@ export async function POST(request: NextRequest) {
     name: String(c.name).slice(0, 200).replace(/[<>{}]/g, ''),
     price: Number(c.price),
   }));
+
+  // Sanitize optional context strings
+  const safeContextSource = context?.source
+    ? String(context.source).slice(0, 100).replace(/[<>{}]/g, '')
+    : undefined;
+  const safeContextDealLabel = context?.dealLabel
+    ? String(context.dealLabel).slice(0, 100).replace(/[<>{}]/g, '')
+    : undefined;
 
   try {
     const { getAnthropicClient } = await import('@/lib/anthropic');
@@ -133,7 +165,7 @@ export async function POST(request: NextRequest) {
       .map((c) => `- ${c.name}: £${Math.round(c.price)}`)
       .join('\n');
 
-    const prompt = `You are a hotel pricing analyst. Given the following hotel and its competitive position, provide 1-2 sentences of booking advice. Be specific about whether to book now or wait, and reference specific competitors and prices.
+    const basePrompt = `You are a hotel pricing analyst. Given the following hotel and its competitive position, provide 1-2 sentences of booking advice. Be specific about whether to book now or wait, and reference specific competitors and prices.
 
 Hotel: ${safeHotelName} in ${safeNeighborhood}
 Price: £${Math.round(dynamicPrice)} per night
@@ -147,6 +179,19 @@ Competitors:
 ${competitorLines}
 
 Provide concise, actionable booking advice.`;
+
+    // Append deal-focused suffix for url-analysis mode
+    let prompt = basePrompt;
+    if (context?.mode === 'url-analysis') {
+      const sourceName = safeContextSource ?? 'an OTA';
+      const dealInfo = safeContextDealLabel
+        ? `${safeContextDealLabel}${context.percentageDiff !== undefined ? `, ${context.percentageDiff}% difference` : ''}`
+        : '';
+      const listedDisplay = context.listedPrice !== undefined
+        ? `${context.currency ?? 'GBP'}${Math.round(context.listedPrice)}`
+        : 'the listed price';
+      prompt = `${basePrompt}\n\nThe user found this hotel listed at ${listedDisplay} on ${sourceName}. Our pricing model values it at £${Math.round(dynamicPrice)}${dealInfo ? ` (deal score: ${dealInfo})` : ''}. Focus your advice on whether this specific listed price represents good value. Reference the most impactful pricing factor driving the difference, and name a specific cheaper alternative if the listed price is above model.`;
+    }
 
     const readableStream = new ReadableStream({
       async start(controller) {

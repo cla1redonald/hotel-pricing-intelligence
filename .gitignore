@@ -49,5 +49,9 @@ data/raw/
 # cleaned/processed data (reproducible from raw — not committed)
 data/clean/
 
+# Amadeus API response cache (re-fetchable, not committed)
+data/api-cache/
+
 # claude
 .claude/settings.local.json
+.env.local.save
