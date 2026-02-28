@@ -359,7 +359,7 @@ export function processLondonHotels(csvPath: string): CleanHotel[] {
   let neighborhoodFromCoords = 0;
   let neighborhoodFallback = 0;
 
-  for (const [name, data] of hotelMap.entries()) {
+  for (const [name, data] of Array.from(hotelMap.entries())) {
     // Skip hotels with no coordinates
     if (data.lat === 0 && data.lng === 0) {
       missingCoords++;
