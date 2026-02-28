@@ -17,8 +17,14 @@ const SUPPORTED_CURRENCIES = ['GBP', 'USD', 'EUR'] as const;
 type Currency = (typeof SUPPORTED_CURRENCIES)[number];
 
 function isValidDateString(str: string): boolean {
-  const d = new Date(str);
-  return !isNaN(d.getTime());
+  // Accept YYYY-MM-DD or full ISO datetime (2026-02-28T00:00:00.000Z)
+  const dateOnly = str.includes('T') ? str.split('T')[0] : str;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return false;
+  // Verify the date is a real calendar date (rejects 2026-02-30 etc.)
+  const d = new Date(dateOnly + 'T00:00:00Z');
+  if (isNaN(d.getTime())) return false;
+  const [y, m, day] = dateOnly.split('-').map(Number);
+  return d.getUTCFullYear() === y && d.getUTCMonth() + 1 === m && d.getUTCDate() === day;
 }
 
 function buildMatchedResponse(

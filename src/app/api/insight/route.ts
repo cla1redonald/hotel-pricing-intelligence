@@ -187,8 +187,13 @@ Provide concise, actionable booking advice.`;
       const dealInfo = safeContextDealLabel
         ? `${safeContextDealLabel}${context.percentageDiff !== undefined ? `, ${context.percentageDiff}% difference` : ''}`
         : '';
+      const VALID_CURRENCIES = ['GBP', 'USD', 'EUR'] as const;
+      const safeCurrency = typeof context.currency === 'string' &&
+        (VALID_CURRENCIES as readonly string[]).includes(context.currency)
+        ? context.currency
+        : 'GBP';
       const listedDisplay = context.listedPrice !== undefined
-        ? `${context.currency ?? 'GBP'}${Math.round(context.listedPrice)}`
+        ? `${safeCurrency}${Math.round(context.listedPrice)}`
         : 'the listed price';
       prompt = `${basePrompt}\n\nThe user found this hotel listed at ${listedDisplay} on ${sourceName}. Our pricing model values it at £${Math.round(dynamicPrice)}${dealInfo ? ` (deal score: ${dealInfo})` : ''}. Focus your advice on whether this specific listed price represents good value. Reference the most impactful pricing factor driving the difference, and name a specific cheaper alternative if the listed price is above model.`;
     }

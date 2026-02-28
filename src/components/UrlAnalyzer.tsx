@@ -67,6 +67,7 @@ export function UrlAnalyzer({ isLoading, onAnalyze }: UrlAnalyzerProps) {
       priceInputRef.current?.focus();
     } else {
       setExtractedName(null);
+      setHotelName('');
       setUrlParseError("We couldn't extract a hotel name from this URL. Please enter the hotel name manually.");
       setSource('unknown');
     }
