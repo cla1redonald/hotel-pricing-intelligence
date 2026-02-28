@@ -16,10 +16,7 @@ import type {
 const SUPPORTED_CURRENCIES = ['GBP', 'USD', 'EUR'] as const;
 type Currency = (typeof SUPPORTED_CURRENCIES)[number];
 
-const ISO_DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-
-function isValidIsoDate(str: string): boolean {
-  if (!ISO_DATE_REGEX.test(str)) return false;
+function isValidDateString(str: string): boolean {
   const d = new Date(str);
   return !isNaN(d.getTime());
 }
@@ -123,7 +120,7 @@ export async function POST(request: NextRequest) {
   // --- Validate checkInDate (optional) ---
   let checkIn: Date;
   if (checkInDate !== undefined) {
-    if (typeof checkInDate !== 'string' || !isValidIsoDate(checkInDate)) {
+    if (typeof checkInDate !== 'string' || !isValidDateString(checkInDate)) {
       return new Response(
         JSON.stringify({ error: 'checkInDate must be a valid ISO date string (YYYY-MM-DD)' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } },
