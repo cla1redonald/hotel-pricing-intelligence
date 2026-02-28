@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SearchBox } from '@/components/SearchBox';
 import { DatePicker } from '@/components/DatePicker';
 import { SearchResults } from '@/components/SearchResults';
@@ -31,6 +31,7 @@ export default function Home() {
   const [searchError, setSearchError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
   const [activeVibe, setActiveVibe] = useState<string | null>(null);
+  const userQueryRef = useRef('');
 
   // --- URL analyzer tab state ---
   const [urlAnalysisResult, setUrlAnalysisResult] = useState<UrlAnalysisResponse | null>(null);
@@ -112,9 +113,10 @@ export default function Home() {
   }
 
   function handleVibeSelect(vibeId: string, vibeQuery: string) {
-    const blended = query.trim()
-      ? `${query.trim()}, ${vibeQuery}`
-      : vibeQuery;
+    // Use the user's original typed text (not previous vibe-injected query)
+    // so switching vibes doesn't accumulate conflicting descriptors
+    const base = userQueryRef.current.trim();
+    const blended = base ? `${base}, ${vibeQuery}` : vibeQuery;
     setActiveVibe(vibeId);
     setQuery(blended);
     performSearch(blended);
@@ -233,7 +235,11 @@ export default function Home() {
               <>
                 <SearchBox
                   query={query}
-                  onQueryChange={setQuery}
+                  onQueryChange={(v) => {
+                    setQuery(v);
+                    userQueryRef.current = v;
+                    if (activeVibe) setActiveVibe(null);
+                  }}
                   onSearch={handleSearch}
                   isLoading={isSearchLoading}
                 />
