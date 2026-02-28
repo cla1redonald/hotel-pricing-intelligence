@@ -7,9 +7,9 @@ interface EmptyStateProps {
 }
 
 const suggestions = [
-  'luxury hotel in central London',
-  "budget-friendly near King's Cross",
-  'boutique hotel with rooftop bar',
+  'Romantic weekend in Covent Garden',
+  'Quiet boutique near Hyde Park',
+  'Family hotel with pool',
 ];
 
 export function EmptyState({ onSuggestionClick }: EmptyStateProps) {

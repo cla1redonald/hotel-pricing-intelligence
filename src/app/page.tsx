@@ -9,6 +9,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { TabNav } from '@/components/TabNav';
 import { UrlAnalyzer } from '@/components/UrlAnalyzer';
+import { VibeChips } from '@/components/VibeChips';
 import { AnalysisCard } from '@/components/AnalysisCard';
 import { warmPinecone } from '@/lib/warm-pinecone';
 import type { SearchResult, UrlAnalysisResponse, UrlAnalysisMatched, UrlAnalysisDisambiguation } from '@/types';
@@ -29,6 +30,7 @@ export default function Home() {
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+  const [activeVibe, setActiveVibe] = useState<string | null>(null);
 
   // --- URL analyzer tab state ---
   const [urlAnalysisResult, setUrlAnalysisResult] = useState<UrlAnalysisResponse | null>(null);
@@ -107,6 +109,15 @@ export default function Home() {
   function handleSuggestionClick(suggestion: string) {
     setQuery(suggestion);
     performSearch(suggestion);
+  }
+
+  function handleVibeSelect(vibeId: string, vibeQuery: string) {
+    const blended = query.trim()
+      ? `${query.trim()}, ${vibeQuery}`
+      : vibeQuery;
+    setActiveVibe(vibeId);
+    setQuery(blended);
+    performSearch(blended);
   }
 
   function handleSearchRetry() {
@@ -206,10 +217,10 @@ export default function Home() {
         <div className="mx-auto max-w-[1200px] px-4 md:px-6 lg:px-8">
           <div className="text-center mb-6">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-[var(--text-inverse)]">
-              Hotel Pricing Intelligence
+              Find your perfect London hotel
             </h1>
             <p className="mt-2 text-base text-[var(--navy-600)]">
-              AI-powered dynamic pricing and competitive analysis for London hotels
+              See the real price.
             </p>
           </div>
 
@@ -229,6 +240,9 @@ export default function Home() {
                 {/* Date picker — left-aligned under search box */}
                 <div className="w-full max-w-[720px]">
                   <DatePicker date={checkInDate} onDateChange={setCheckInDate} />
+                </div>
+                <div className="w-full max-w-[720px] mt-1">
+                  <VibeChips onVibeSelect={handleVibeSelect} activeVibe={activeVibe} />
                 </div>
               </>
             )}
@@ -277,7 +291,7 @@ export default function Home() {
             {!hasSearched && !isSearchLoading && (
               <div className="text-center py-16">
                 <p className="text-sm text-[var(--text-muted)]">
-                  Search for London hotels above to get started.
+                  Search or pick a vibe above to discover London hotels.
                 </p>
               </div>
             )}

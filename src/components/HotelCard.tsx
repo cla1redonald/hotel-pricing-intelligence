@@ -9,12 +9,13 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import { StarRating } from '@/components/StarRating';
-import { MatchScoreBadge } from '@/components/MatchScoreBadge';
+import { DealBadge } from '@/components/DealBadge';
 import { PriceBreakdown } from '@/components/PriceBreakdown';
 import { PriceProjectionChart } from '@/components/PriceProjectionChart';
 import { CompetitiveSet } from '@/components/CompetitiveSet';
 import { ClaudeInsight } from '@/components/ClaudeInsight';
-import { calculatePrice, calculateProjection } from '@/lib/pricing';
+import { calculatePrice, calculateProjection, getListedPrice } from '@/lib/pricing';
+import { calculateDealScore } from '@/lib/deal-score';
 import type { SearchResult } from '@/types';
 import { formatPrice } from '@/lib/format';
 
@@ -34,9 +35,11 @@ export function HotelCard({ result, checkInDate }: HotelCardProps) {
     []
   );
 
-  const { hotel, matchPercentage } = result;
+  const { hotel } = result;
   const breakdown = calculatePrice(hotel, checkInDate);
   const projectionData = calculateProjection(hotel, checkInDate);
+  const listedPrice = getListedPrice(hotel, checkInDate);
+  const dealScore = calculateDealScore(listedPrice, breakdown.finalPrice);
 
   return (
     <Card
@@ -57,7 +60,7 @@ export function HotelCard({ result, checkInDate }: HotelCardProps) {
         <span className="text-sm font-medium text-[var(--text-secondary)]">
           {hotel.neighborhood}
         </span>
-        <MatchScoreBadge percentage={matchPercentage} />
+        <DealBadge dealScore={dealScore} />
       </div>
 
       {/* Price section */}
@@ -80,7 +83,7 @@ export function HotelCard({ result, checkInDate }: HotelCardProps) {
             ) : (
               <ChevronDown size={16} aria-hidden="true" />
             )}
-            {isBreakdownOpen ? 'Hide price breakdown' : 'View price breakdown'}
+            {isBreakdownOpen ? 'Hide price breakdown' : 'Why this price?'}
           </button>
         </CollapsibleTrigger>
         <CollapsibleContent className="mt-2">
