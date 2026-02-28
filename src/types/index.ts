@@ -46,3 +46,65 @@ export interface CompetitiveHotel {
   dynamicPrice: number;
   priceDelta: number;
 }
+
+// ---------------------------------------------------------------------------
+// URL Price Analyzer types
+// ---------------------------------------------------------------------------
+
+export interface ParsedUrl {
+  hotelName: string | null;
+  source: 'booking' | 'hotels' | 'expedia' | 'generic' | 'unknown';
+  originalUrl: string;
+  checkInDate?: string; // ISO date if extractable from URL query string
+}
+
+export interface DealScore {
+  label: 'Great Deal' | 'Fair Price' | 'Overpriced';
+  percentageDiff: number; // Absolute %, always positive
+  savingsGbp: number;     // Absolute £ difference, always positive
+  direction: 'saving' | 'overpaying';
+}
+
+export type UrlAnalysisResponse =
+  | UrlAnalysisMatched
+  | UrlAnalysisNotMatched
+  | UrlAnalysisDisambiguation;
+
+export interface UrlAnalysisMatched {
+  matched: true;
+  extractedName: string;
+  source?: string;
+  matchedHotel: Hotel;
+  matchMethod: 'exact' | 'fuzzy' | 'semantic';
+  matchConfidence: number;
+  modelPrice: number;
+  listedPrice: number;
+  listedPriceGbp: number;
+  currency: 'GBP' | 'USD' | 'EUR';
+  dealScore: DealScore;
+  pricingBreakdown: PricingBreakdown;
+  projection: ProjectionPoint[];
+}
+
+export interface UrlAnalysisNotMatched {
+  matched: false;
+  extractedName: string;
+  source?: string;
+  listedPrice: number;
+  listedPriceGbp: number;
+  currency: 'GBP' | 'USD' | 'EUR';
+}
+
+export interface UrlAnalysisDisambiguation {
+  matched: false;
+  extractedName: string;
+  source?: string;
+  listedPrice: number;
+  listedPriceGbp: number;
+  currency: 'GBP' | 'USD' | 'EUR';
+  disambiguation: Array<{
+    hotel: Hotel;
+    confidence: number;
+    priceRange?: { min: number; max: number };
+  }>;
+}
