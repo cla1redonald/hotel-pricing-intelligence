@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import type { PricingBreakdown, ProjectionPoint } from '@/types';
+import type { PricingBreakdown, ProjectionPoint, DealScore } from '@/types';
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
@@ -68,6 +68,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { PriceProjectionChart } from '@/components/PriceProjectionChart';
+import { DealBadge } from '@/components/DealBadge';
 
 // ---------------------------------------------------------------------------
 // SearchBox tests
@@ -403,5 +404,85 @@ describe('SkeletonCard', () => {
     // chart skeleton should be a tall element
     const tallSkeleton = container.querySelector('[class*="h-\\[160px\\]"]');
     expect(tallSkeleton).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DealBadge tests
+// ---------------------------------------------------------------------------
+
+describe('DealBadge', () => {
+  it('renders Great Deal with savings', () => {
+    const dealScore: DealScore = {
+      label: 'Great Deal',
+      percentageDiff: 12.5,
+      savingsGbp: 25,
+      direction: 'saving',
+    };
+    render(React.createElement(DealBadge, { dealScore }));
+    expect(screen.getByText(/Great Deal/)).toBeInTheDocument();
+    expect(screen.getByText(/Save £25/)).toBeInTheDocument();
+  });
+
+  it('renders Fair Price without savings amount', () => {
+    const dealScore: DealScore = {
+      label: 'Fair Price',
+      percentageDiff: 5,
+      savingsGbp: 10,
+      direction: 'overpaying',
+    };
+    render(React.createElement(DealBadge, { dealScore }));
+    expect(screen.getByText(/Fair Price/)).toBeInTheDocument();
+  });
+
+  it('renders Overpriced with overpaying amount', () => {
+    const dealScore: DealScore = {
+      label: 'Overpriced',
+      percentageDiff: 15,
+      savingsGbp: 30,
+      direction: 'overpaying',
+    };
+    render(React.createElement(DealBadge, { dealScore }));
+    expect(screen.getByText(/Overpriced/)).toBeInTheDocument();
+    expect(screen.getByText(/£30 over/)).toBeInTheDocument();
+  });
+
+  it('renders nothing when dealScore is null', () => {
+    const { container } = render(React.createElement(DealBadge, { dealScore: null }));
+    expect(container.firstChild).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// VibeChips tests
+// ---------------------------------------------------------------------------
+
+import { VibeChips } from '@/components/VibeChips';
+
+describe('VibeChips', () => {
+  it('renders all 6 vibe chips', () => {
+    render(React.createElement(VibeChips, { onVibeSelect: vi.fn(), activeVibe: null }));
+    expect(screen.getByText('Romantic')).toBeInTheDocument();
+    expect(screen.getByText('Business')).toBeInTheDocument();
+    expect(screen.getByText('Boutique')).toBeInTheDocument();
+    expect(screen.getByText('Party')).toBeInTheDocument();
+    expect(screen.getByText('Quiet Escape')).toBeInTheDocument();
+    expect(screen.getByText('Family')).toBeInTheDocument();
+  });
+
+  it('calls onVibeSelect with query when chip is clicked', () => {
+    const onVibeSelect = vi.fn();
+    render(React.createElement(VibeChips, { onVibeSelect, activeVibe: null }));
+    fireEvent.click(screen.getByText('Romantic'));
+    expect(onVibeSelect).toHaveBeenCalledWith(
+      'romantic',
+      expect.stringContaining('romantic')
+    );
+  });
+
+  it('highlights the active vibe chip', () => {
+    render(React.createElement(VibeChips, { onVibeSelect: vi.fn(), activeVibe: 'romantic' }));
+    const chip = screen.getByText('Romantic').closest('button');
+    expect(chip).toHaveStyle({ borderColor: 'var(--gold-500)' });
   });
 });
