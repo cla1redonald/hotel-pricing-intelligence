@@ -40,8 +40,9 @@ ALTER TABLE hotels ADD CONSTRAINT chk_pricing_factors CHECK (
   AND jsonb_array_length(pricing_factors -> 'seasonality') = 12
 );
 
--- No RLS needed: public read-only data, no user accounts
--- Supabase anon key has SELECT-only access (configured in Supabase dashboard)
+-- RLS: defense in depth — restrict anon key to SELECT only
+ALTER TABLE hotels ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public read access" ON hotels FOR SELECT USING (true);
 
 -- Expected pricing_factors JSONB structure:
 -- {

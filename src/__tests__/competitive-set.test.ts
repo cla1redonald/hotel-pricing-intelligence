@@ -391,7 +391,24 @@ describe('POST /api/insight — input validation', () => {
   });
 
   it('returns a streaming response for a valid request', async () => {
-    // Mock the Anthropic SDK to return a controlled async iterator
+    // Set env var for Anthropic client validation
+    process.env.ANTHROPIC_API_KEY = 'test-key';
+
+    // Mock the Anthropic singleton module
+    vi.doMock('@/lib/anthropic', () => {
+      const fakeStream = {
+        [Symbol.asyncIterator]: async function* () {
+          yield { type: 'content_block_delta', delta: { type: 'text_delta', text: 'Test insight' } };
+        },
+      };
+      return {
+        getAnthropicClient: vi.fn().mockReturnValue({
+          messages: { stream: vi.fn().mockReturnValue(fakeStream) },
+        }),
+      };
+    });
+
+    // Also mock the SDK in case of direct import fallback
     vi.doMock('@anthropic-ai/sdk', () => {
       const fakeStream = {
         [Symbol.asyncIterator]: async function* () {

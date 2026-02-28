@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CompetitiveHotel } from '@/types';
 import { formatPrice } from '@/lib/format';
 
@@ -112,6 +112,8 @@ export function CompetitiveSet({
   const [competitors, setCompetitors] = useState<CompetitiveHotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const callbackRef = useRef(onCompetitorsLoaded);
+  callbackRef.current = onCompetitorsLoaded;
 
   useEffect(() => {
     let cancelled = false;
@@ -140,8 +142,8 @@ export function CompetitiveSet({
         const loaded: CompetitiveHotel[] = data.competitors ?? [];
         setCompetitors(loaded);
 
-        if (onCompetitorsLoaded) {
-          onCompetitorsLoaded(
+        if (callbackRef.current) {
+          callbackRef.current(
             loaded.map((c) => ({ name: c.hotel.name, price: c.dynamicPrice }))
           );
         }
@@ -161,7 +163,7 @@ export function CompetitiveSet({
     return () => {
       cancelled = true;
     };
-  }, [pineconeId, checkInDate, onCompetitorsLoaded]);
+  }, [pineconeId, checkInDate]);
 
   // Graceful degradation: hide entirely on error
   if (hasError) return null;

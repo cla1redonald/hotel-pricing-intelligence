@@ -4,10 +4,11 @@ let _client: SupabaseClient | null = null;
 
 export function getSupabaseClient(): SupabaseClient {
   if (!_client) {
-    _client = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!
-    );
+    const url = process.env.SUPABASE_URL;
+    const key = process.env.SUPABASE_ANON_KEY;
+    if (!url) throw new Error('SUPABASE_URL environment variable is required');
+    if (!key) throw new Error('SUPABASE_ANON_KEY environment variable is required');
+    _client = createClient(url, key);
   }
   return _client;
 }

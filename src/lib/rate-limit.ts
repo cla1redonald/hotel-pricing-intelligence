@@ -1,3 +1,6 @@
+// NOTE: In-memory rate limiter — resets on serverless cold starts.
+// Effective within a single warm Vercel instance but not distributed.
+// For production, replace with Vercel KV (Redis) or Upstash.
 const requestLog = new Map<string, number[]>();
 
 const WINDOW_MS = 60_000; // 1 minute

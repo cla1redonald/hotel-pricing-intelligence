@@ -75,6 +75,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // S2: Validate pricingBreakdown shape — prevent .toFixed() on undefined
+  const pb = pricingBreakdown as unknown as Record<string, unknown>;
+  if (
+    typeof pb.demandMultiplier !== 'number' ||
+    typeof pb.seasonalityMultiplier !== 'number' ||
+    typeof pb.leadTimeMultiplier !== 'number' ||
+    typeof pb.dayOfWeekMultiplier !== 'number'
+  ) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid pricingBreakdown: all multipliers must be numbers' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+
   if (!Array.isArray(competitors)) {
     return new Response(
       JSON.stringify({ error: 'competitors is required' }),
@@ -82,17 +96,46 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  try {
-    const Anthropic = (await import('@anthropic-ai/sdk')).default;
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  // S3: Validate competitor element shapes and limit array size
+  if (competitors.length > 10) {
+    return new Response(
+      JSON.stringify({ error: 'Too many competitors (max 10)' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+  const validCompetitors = competitors.every(
+    (c: unknown) =>
+      typeof c === 'object' &&
+      c !== null &&
+      typeof (c as Record<string, unknown>).name === 'string' &&
+      typeof (c as Record<string, unknown>).price === 'number'
+  );
+  if (!validCompetitors) {
+    return new Response(
+      JSON.stringify({ error: 'Invalid competitors format: each must have name (string) and price (number)' }),
+      { status: 400, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
 
-    const competitorLines = competitors
+  // S4: Sanitize and truncate user-supplied strings to prevent prompt injection
+  const safeHotelName = hotelName.slice(0, 200).replace(/[<>{}]/g, '');
+  const safeNeighborhood = neighborhood.slice(0, 100).replace(/[<>{}]/g, '');
+  const safeCompetitors = competitors.map((c) => ({
+    name: String(c.name).slice(0, 200).replace(/[<>{}]/g, ''),
+    price: Number(c.price),
+  }));
+
+  try {
+    const { getAnthropicClient } = await import('@/lib/anthropic');
+    const client = getAnthropicClient();
+
+    const competitorLines = safeCompetitors
       .map((c) => `- ${c.name}: £${Math.round(c.price)}`)
       .join('\n');
 
     const prompt = `You are a hotel pricing analyst. Given the following hotel and its competitive position, provide 1-2 sentences of booking advice. Be specific about whether to book now or wait, and reference specific competitors and prices.
 
-Hotel: ${hotelName} in ${neighborhood}
+Hotel: ${safeHotelName} in ${safeNeighborhood}
 Price: £${Math.round(dynamicPrice)} per night
 Pricing factors:
 - Demand: ×${pricingBreakdown.demandMultiplier.toFixed(2)}

@@ -27,8 +27,8 @@ export default function Home() {
     void warmPinecone();
   }, []);
 
-  async function handleSearch() {
-    const trimmed = query.trim();
+  async function performSearch(searchQuery: string) {
+    const trimmed = searchQuery.trim();
     if (!trimmed) return;
 
     setIsLoading(true);
@@ -76,57 +76,13 @@ export default function Home() {
     }
   }
 
+  function handleSearch() {
+    performSearch(query);
+  }
+
   function handleSuggestionClick(suggestion: string) {
     setQuery(suggestion);
-    // Trigger search after state update by using the suggestion value directly
-    const trimmed = suggestion.trim();
-    if (!trimmed) return;
-
-    setIsLoading(true);
-    setError(null);
-    setHasSearched(true);
-
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), SEARCH_TIMEOUT_MS);
-
-    fetch('/api/search', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: trimmed,
-        checkInDate: checkInDate.toISOString(),
-      }),
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(
-            errorData.error ?? `Search failed (${response.status})`
-          );
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setResults(data.results ?? []);
-      })
-      .catch((err) => {
-        let message: string;
-        if (err instanceof Error && err.name === 'AbortError') {
-          message = 'Search timed out. Please try again.';
-        } else {
-          message =
-            err instanceof Error
-              ? err.message
-              : 'Something went wrong. Please try again.';
-        }
-        setError(message);
-        setResults([]);
-      })
-      .finally(() => {
-        clearTimeout(timeoutId);
-        setIsLoading(false);
-      });
+    performSearch(suggestion);
   }
 
   function handleRetry() {
