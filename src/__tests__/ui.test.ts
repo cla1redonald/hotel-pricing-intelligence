@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import React from 'react';
-import type { PricingBreakdown, ProjectionPoint } from '@/types';
+import type { PricingBreakdown, ProjectionPoint, DealScore } from '@/types';
+import { VibeChips } from '@/components/VibeChips';
 
 // ---------------------------------------------------------------------------
 // Shared fixtures
@@ -68,6 +69,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { ErrorState } from '@/components/ErrorState';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { PriceProjectionChart } from '@/components/PriceProjectionChart';
+import { DealBadge } from '@/components/DealBadge';
 
 // ---------------------------------------------------------------------------
 // SearchBox tests
@@ -305,28 +307,28 @@ describe('EmptyState', () => {
 
   it('shows suggestion chips', () => {
     render(React.createElement(EmptyState, { onSuggestionClick: vi.fn() }));
-    expect(screen.getByText('luxury hotel in central London')).toBeDefined();
-    expect(screen.getByText("budget-friendly near King's Cross")).toBeDefined();
-    expect(screen.getByText('boutique hotel with rooftop bar')).toBeDefined();
+    expect(screen.getByText('Romantic weekend in Covent Garden')).toBeDefined();
+    expect(screen.getByText('Quiet boutique near Hyde Park')).toBeDefined();
+    expect(screen.getByText('Family hotel with pool')).toBeDefined();
   });
 
   it('calls onSuggestionClick with the correct query when a chip is clicked', () => {
     const onSuggestionClick = vi.fn();
     render(React.createElement(EmptyState, { onSuggestionClick }));
-    const chip = screen.getByText('luxury hotel in central London');
+    const chip = screen.getByText('Romantic weekend in Covent Garden');
     fireEvent.click(chip);
-    expect(onSuggestionClick).toHaveBeenCalledWith('luxury hotel in central London');
+    expect(onSuggestionClick).toHaveBeenCalledWith('Romantic weekend in Covent Garden');
   });
 
   it('calls onSuggestionClick for all suggestion chips', () => {
     const onSuggestionClick = vi.fn();
     render(React.createElement(EmptyState, { onSuggestionClick }));
 
-    fireEvent.click(screen.getByText("budget-friendly near King's Cross"));
-    expect(onSuggestionClick).toHaveBeenCalledWith("budget-friendly near King's Cross");
+    fireEvent.click(screen.getByText('Quiet boutique near Hyde Park'));
+    expect(onSuggestionClick).toHaveBeenCalledWith('Quiet boutique near Hyde Park');
 
-    fireEvent.click(screen.getByText('boutique hotel with rooftop bar'));
-    expect(onSuggestionClick).toHaveBeenCalledWith('boutique hotel with rooftop bar');
+    fireEvent.click(screen.getByText('Family hotel with pool'));
+    expect(onSuggestionClick).toHaveBeenCalledWith('Family hotel with pool');
   });
 });
 
@@ -403,5 +405,83 @@ describe('SkeletonCard', () => {
     // chart skeleton should be a tall element
     const tallSkeleton = container.querySelector('[class*="h-\\[160px\\]"]');
     expect(tallSkeleton).toBeDefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// DealBadge tests
+// ---------------------------------------------------------------------------
+
+describe('DealBadge', () => {
+  it('renders Great Deal with savings', () => {
+    const dealScore: DealScore = {
+      label: 'Great Deal',
+      percentageDiff: 12.5,
+      savingsGbp: 25,
+      direction: 'saving',
+    };
+    render(React.createElement(DealBadge, { dealScore }));
+    expect(screen.getByText(/Great Deal/)).toBeDefined();
+    expect(screen.getByText(/Save £25/)).toBeDefined();
+  });
+
+  it('renders Fair Price without savings amount', () => {
+    const dealScore: DealScore = {
+      label: 'Fair Price',
+      percentageDiff: 5,
+      savingsGbp: 10,
+      direction: 'overpaying',
+    };
+    render(React.createElement(DealBadge, { dealScore }));
+    expect(screen.getByText(/Fair Price/)).toBeDefined();
+  });
+
+  it('renders Overpriced with overpaying amount', () => {
+    const dealScore: DealScore = {
+      label: 'Overpriced',
+      percentageDiff: 15,
+      savingsGbp: 30,
+      direction: 'overpaying',
+    };
+    render(React.createElement(DealBadge, { dealScore }));
+    expect(screen.getByText(/Overpriced/)).toBeDefined();
+    expect(screen.getByText(/£30 over/)).toBeDefined();
+  });
+
+  it('renders nothing when dealScore is null', () => {
+    const { container } = render(React.createElement(DealBadge, { dealScore: null }));
+    expect(container.firstChild).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// VibeChips tests
+// ---------------------------------------------------------------------------
+
+describe('VibeChips', () => {
+  it('renders all 6 vibe chips', () => {
+    render(React.createElement(VibeChips, { onVibeSelect: vi.fn(), activeVibe: null }));
+    expect(screen.getByText('Romantic')).toBeDefined();
+    expect(screen.getByText('Business')).toBeDefined();
+    expect(screen.getByText('Boutique')).toBeDefined();
+    expect(screen.getByText('Party')).toBeDefined();
+    expect(screen.getByText('Quiet Escape')).toBeDefined();
+    expect(screen.getByText('Family')).toBeDefined();
+  });
+
+  it('calls onVibeSelect with query when chip is clicked', () => {
+    const onVibeSelect = vi.fn();
+    render(React.createElement(VibeChips, { onVibeSelect, activeVibe: null }));
+    fireEvent.click(screen.getByText('Romantic'));
+    expect(onVibeSelect).toHaveBeenCalledWith(
+      'romantic',
+      expect.stringContaining('romantic')
+    );
+  });
+
+  it('highlights the active vibe chip', () => {
+    render(React.createElement(VibeChips, { onVibeSelect: vi.fn(), activeVibe: 'romantic' }));
+    const chip = screen.getByText('Romantic').closest('button');
+    expect(chip?.style.borderColor).toBe('var(--gold-500)');
   });
 });

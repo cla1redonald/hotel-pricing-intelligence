@@ -6,6 +6,7 @@ import {
   calculateDayOfWeekMultiplier,
   calculatePrice,
   calculateProjection,
+  getListedPrice,
 } from '@/lib/pricing';
 import type { Hotel } from '@/types';
 
@@ -495,6 +496,66 @@ describe('calculateProjection', () => {
     for (const point of projection) {
       expect(point.factors.demandMultiplier).toBeGreaterThanOrEqual(0.7);
       expect(point.factors.demandMultiplier).toBeLessThanOrEqual(1.5);
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getListedPrice
+// ---------------------------------------------------------------------------
+
+describe('getListedPrice', () => {
+  const mockHotel: Hotel = {
+    id: 'test-1',
+    name: 'Test Hotel',
+    neighborhood: 'Mayfair',
+    lat: null,
+    lng: null,
+    star_rating: 4,
+    base_rate_gbp: 200,
+    review_summary: 'A lovely hotel',
+    amenities: ['wifi', 'gym'],
+    pricing_factors: {
+      demand_curve: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+      seasonality: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+      occupancy_base: 60,
+    },
+    pinecone_id: 'hotel-test-1',
+    created_at: '2024-01-01T00:00:00Z',
+  };
+
+  it('returns a number greater than zero', () => {
+    const checkIn = new Date('2025-06-15');
+    const listed = getListedPrice(mockHotel, checkIn);
+    expect(listed).toBeGreaterThan(0);
+  });
+
+  it('is deterministic — same inputs produce same output', () => {
+    const checkIn = new Date('2025-06-15');
+    const a = getListedPrice(mockHotel, checkIn);
+    const b = getListedPrice(mockHotel, checkIn);
+    expect(a).toBe(b);
+  });
+
+  it('varies by hotel pinecone_id', () => {
+    const checkIn = new Date('2025-06-15');
+    const hotelA = { ...mockHotel, pinecone_id: 'hotel-aaa' };
+    const hotelB = { ...mockHotel, pinecone_id: 'hotel-bbb' };
+    const priceA = getListedPrice(hotelA, checkIn);
+    const priceB = getListedPrice(hotelB, checkIn);
+    expect(priceA).not.toBe(priceB);
+  });
+
+  it('stays within -15% to +20% of model price', () => {
+    const checkIn = new Date('2025-06-15');
+    const now = new Date('2025-06-01');
+    for (let i = 0; i < 50; i++) {
+      const h = { ...mockHotel, pinecone_id: `hotel-bounds-${i}` };
+      const listed = getListedPrice(h, checkIn, now);
+      const { finalPrice } = calculatePrice(h, checkIn, now);
+      const ratio = listed / finalPrice;
+      expect(ratio).toBeGreaterThanOrEqual(0.85);
+      expect(ratio).toBeLessThanOrEqual(1.20);
     }
   });
 });

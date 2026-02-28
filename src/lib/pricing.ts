@@ -181,3 +181,20 @@ export function calculateProjection(
 
   return points;
 }
+
+/**
+ * Generate a synthetic "market listed price" for a hotel on a given date.
+ * Uses a seeded variance per hotel so some hotels are deals, some overpriced.
+ * Variance range: -15% to +20% of the model price.
+ */
+export function getListedPrice(
+  hotel: Hotel,
+  checkInDate: Date,
+  now: Date = new Date(),
+): number {
+  const { finalPrice } = calculatePrice(hotel, checkInDate, now);
+  const variance = seededRandom(`listed:${hotel.pinecone_id}`);
+  // Map [0, 1) to [-0.15, +0.20]
+  const multiplier = 1 + (variance * 0.35 - 0.15);
+  return Math.round(multiplier * finalPrice * 100) / 100;
+}
