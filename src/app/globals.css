@@ -1,0 +1,112 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ---- Custom design tokens (hex) ---- */
+    --navy-950: #0f172a;
+    --navy-900: #1e293b;
+    --navy-800: #334155;
+    --navy-700: #475569;
+    --navy-600: #64748b;
+
+    --gold-600: #a88a3a;
+    --gold-500: #c9a84c;
+    --gold-400: #d4b86a;
+    --gold-300: #e0c888;
+
+    --bg-primary: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-muted: #f1f5f9;
+    --bg-input: #ffffff;
+
+    --discount: #16a34a;
+    --discount-bg: #f0fdf4;
+    --premium: #dc2626;
+    --premium-bg: #fef2f2;
+    --neutral-pricing: #d97706;
+    --neutral-bg: #fffbeb;
+
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --text-inverse: #f8fafc;
+
+    /* ---- shadcn/ui HSL tokens ---- */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 42 54% 54%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 65%;
+    --accent: 42 54% 77%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 84% 50%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 42 54% 54%;
+    --chart-1: 42 54% 54%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 222 47% 11%;
+    --chart-4: 215 16% 65%;
+    --chart-5: 0 84% 50%;
+    --radius: 0.5rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Focus ring: gold at 2px offset */
+*:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
+}
+
+/* Skeleton shimmer animation */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-muted) 25%,
+    var(--bg-card) 50%,
+    var(--bg-muted) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer {
+    animation: none;
+    background: var(--bg-muted);
+  }
+}
