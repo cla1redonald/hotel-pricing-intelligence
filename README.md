@@ -43,7 +43,7 @@ Accepted. Cold starts mitigated with warming strategy.
 | Pinecone | Vector search (semantic similarity) |
 | OpenAI text-embedding-3-small | Query embeddings (1536 dimensions) |
 | Supabase Postgres | Hotel metadata + pricing factors |
-| Claude API | Streaming booking insights |
+| Claude API (Haiku) | Streaming booking insights |
 | Recharts | Price projection charts |
 | Vitest | Testing |
 

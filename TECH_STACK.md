@@ -46,7 +46,7 @@
 ## Data Pipeline (devDependencies)
 | Package | Version | Purpose |
 |---------|---------|---------|
-| csv-parse | ^5.6.0 | Kaggle CSV parsing |
+| csv-parse | ^5.6.0 | CSV parsing (installed for future real data pipeline) |
 | dotenv | ^16.4.7 | Env vars for scripts |
 | tsx | ^4.19.2 | Run TypeScript scripts directly |
 

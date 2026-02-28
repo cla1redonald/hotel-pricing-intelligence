@@ -19,7 +19,7 @@ A single-page application combining semantic vector search with a transparent dy
          |                     |  |        |           |
     +----+----+          +-----+--+--+   +-+--------+
     | OpenAI  |          | Pinecone   |  | Claude   |
-    | Embed   |          | Vector DB  |  | Sonnet   |
+    | Embed   |          | Vector DB  |  | Haiku    |
     | API     |          | (cosine)   |  | (stream) |
     +---------+          +-----+------+  +----------+
                                |
@@ -52,7 +52,7 @@ A single-page application combining semantic vector search with a transparent dy
 **Layer 1 — Model Layer (External APIs):**
 - OpenAI text-embedding-3-small: Embedding generation, deterministic for identical inputs, 1536 dimensions.
 - Pinecone serverless: Vector index with metadata, cosine metric, returns scored matches.
-- Claude claude-sonnet-4-5-20241022: Streaming text generation, non-deterministic, used for advisory insights only.
+- Claude claude-3-haiku-20240307: Streaming text generation, non-deterministic, used for advisory insights only.
 
 **Layer 2 — API Layer (Next.js Route Handlers):**
 - `/api/search` — Orchestrates embed + search + enrich. Synchronous JSON response.
@@ -154,7 +154,7 @@ data: {"text": "Based on..."}
 data: [DONE]
 ```
 
-**Pipeline:** Validate → construct Claude prompt → stream via `claude-sonnet-4-5-20241022` → pipe tokens as SSE → send [DONE].
+**Pipeline:** Validate → construct Claude prompt → stream via `claude-3-haiku-20240307` → pipe tokens as SSE → send [DONE].
 
 ## 5. Data Flows
 
