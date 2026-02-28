@@ -71,8 +71,6 @@ describe('bookingScoreToStars', () => {
 // ─── deriveBaseRate ───────────────────────────────────────────────────────────
 
 describe('deriveBaseRate', () => {
-  const rng = makeRng(42);
-
   it('returns a positive number', () => {
     const rate = deriveBaseRate(4, 'Westminster', 8.5, makeRng(1));
     expect(rate).toBeGreaterThan(0);
