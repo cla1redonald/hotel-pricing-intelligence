@@ -8,6 +8,7 @@ interface CompetitiveSetProps {
   pineconeId: string;
   checkInDate: Date;
   onCompetitorsLoaded?: (competitors: Array<{ name: string; price: number }>) => void;
+  onFullCompetitorsLoaded?: (competitors: CompetitiveHotel[]) => void;
 }
 
 function formatDelta(delta: number): string {
@@ -108,12 +109,15 @@ export function CompetitiveSet({
   pineconeId,
   checkInDate,
   onCompetitorsLoaded,
+  onFullCompetitorsLoaded,
 }: CompetitiveSetProps) {
   const [competitors, setCompetitors] = useState<CompetitiveHotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const callbackRef = useRef(onCompetitorsLoaded);
   callbackRef.current = onCompetitorsLoaded;
+  const fullCallbackRef = useRef(onFullCompetitorsLoaded);
+  fullCallbackRef.current = onFullCompetitorsLoaded;
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +150,10 @@ export function CompetitiveSet({
           callbackRef.current(
             loaded.map((c) => ({ name: c.hotel.name, price: c.dynamicPrice }))
           );
+        }
+
+        if (fullCallbackRef.current) {
+          fullCallbackRef.current(loaded);
         }
       } catch (err) {
         if (cancelled) return;
